@@ -1,33 +1,34 @@
 const bcrypt = require("bcryptjs");
-const Users = require("../models/Users"); 
+const Users = require("../models/Users");
+const express = require("express");
+const router = express.Router();
 const jwt = require("jsonwebtoken");
 const nodemailer = require("nodemailer");
 
 const sendConfirmationEmail = async (email, userName, userId) => {
-  const token = jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: '1h' });
+  const token = jwt.sign({ userId }, process.env.JWT_SECRET, { expiresIn: "1h" });
   const verificationLink = `http://localhost:3000/login?token=${token}`;
 
-  // Set up the transporter for sending the email
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: process.env.EMAIL_USER, 
-      pass: process.env.EMAIL_PASS, 
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS,
     },
   });
 
   const mailOptions = {
     from: process.env.EMAIL_USER,
     to: email,
-    subject: 'Account Created - Service on Tab',
+    subject: "Account Created - Service on Tab",
     text: `Hello ${userName},\n\nYour account has been successfully created. Please click the link below to verify your email and log in:\n\n${verificationLink}\n\nThank you!`,
   };
 
   try {
     await transporter.sendMail(mailOptions);
-    console.log('Confirmation email sent to:', email);
+    console.log("Confirmation email sent to:", email);
   } catch (error) {
-    console.error('Error sending email:', error);
+    console.error("Error sending email:", error);
   }
 };
 
@@ -35,7 +36,6 @@ const signUpController = async (req, res) => {
   try {
     const { name, email, password, phoneNumber, address } = req.body;
 
-    // Validation for missing fields
     if (!name || !email || !password || !phoneNumber || !address) {
       return res.status(400).json({
         success: false,
@@ -43,7 +43,6 @@ const signUpController = async (req, res) => {
       });
     }
 
-    // Check if user already exists in the database
     const existingProvider = await Users.findOne({ email });
 
     if (existingProvider) {
@@ -53,29 +52,28 @@ const signUpController = async (req, res) => {
       });
     }
 
-    // Hash the password before saving the user to the database
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create the new provider object and set verified as false initially
     const newProvider = new Users({
       name,
       email,
       password: hashedPassword,
       phoneNumber,
       address,
-      verified: false, // Ensure the user is not verified initially
+      verified: false,
     });
 
-    // Save the new provider to the database
     await newProvider.save();
 
-    // Send the confirmation email to the provider
+    // ✅ Token generate karein aur response me send karein
+    const token = jwt.sign({ userId: newProvider._id }, process.env.JWT_SECRET, { expiresIn: "1h" });
+
     await sendConfirmationEmail(email, name, newProvider._id);
 
-    // Respond to the client with success message
     res.status(201).json({
       success: true,
       message: "Account created successfully. Please check your email to verify your account.",
+      token, // ✅ Ab token response me send hoga
     });
 
   } catch (e) {

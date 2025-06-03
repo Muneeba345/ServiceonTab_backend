@@ -1,4 +1,3 @@
-// models/providersignup.js
 const mongoose = require('mongoose');
 
 const providerSchema = new mongoose.Schema({
@@ -11,8 +10,12 @@ const providerSchema = new mongoose.Schema({
     cnicFront: { type: String, required: true },
     cnicBack: { type: String, required: true },
     policeCertificate: { type: String, required: true },
-    isVerified: { type: Boolean, default: false }, // New field for email verification
-    status: { type: String, default: 'pending' } // New field for provider status, default is 'pending'
+    isVerified: { type: Boolean, default: false },
+    status: { 
+        type: String, 
+        enum: ['pending', 'active', 'blocked'],  // Ensure only these values are allowed
+        default: 'pending'   // Default to 'pending' when a new provider is created
+    },
 });
 
 module.exports = mongoose.model('ProviderSignup', providerSchema);

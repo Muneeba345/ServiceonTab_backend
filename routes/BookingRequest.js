@@ -1,8 +1,6 @@
 const express = require('express');
 const Booking = require('../models/booking.js');
-const path = require('path');
 const router = express.Router();
-const fs = require('fs');
 const nodemailer = require('nodemailer');
 
 
@@ -26,8 +24,10 @@ router.get('/pending-requests', async (req, res) => {
 
 
   const sendConfirmationEmail = async (email, serviceName) => {
- 
-    const verificationLink = `http://localhost:3000/detailsview`;
+    console.log(`Sending email to: ${email}`); 
+
+    const verificationLink = `http://localhost:3000/displaybooking`; 
+    
     
   
   
@@ -35,8 +35,9 @@ router.get('/pending-requests', async (req, res) => {
       from: process.env.EMAIL_USER,
       to: email,
       subject: 'Booking Request Accepted - Service on Tab',
-      text: `Hello, ${serviceName},\n\n service is successfully booked. Please click the link below to see details:\n\n${verificationLink}\n\nThank you!`,
-    };
+      text: `Hello,\n\nYour ${serviceName} service is successfully booked. 
+      Please click the link below to see details:${verificationLink}\nThank you!`,
+   };
   
     try {
       await transporter.sendMail(mailOptions);
@@ -52,7 +53,7 @@ router.get('/pending-requests', async (req, res) => {
       from: process.env.EMAIL_USER,
       to: email,
       subject: 'Service Booking Request Rejected',
-      text: `Hello, ${serviceName},\n\n service booking request has been rejected.\n\nThank you for your understanding.`,
+      text: "Hello,\n\n ${serviceName} service booking request has been rejected.Thank you for your understanding.",
     };
   
     try {
@@ -73,12 +74,17 @@ router.get('/pending-requests', async (req, res) => {
             return res.status(404).json({ success: false, message: 'Service not found.' });
         }
   
-       book.isVerified = isAccepted;
-        book.status = isAccepted ? 'approved' : 'rejected';
+      
+        book.status = isAccepted ? 'accepted' : 'rejected';
   
-        // If accepted, send email 
+
+        if (!book.email) {
+          return res.status(400).json({ success: false, message: 'No email associated with booking.' });
+      }
+      
+      
         if (isAccepted) {
-          await sendConfirmationEmail(book.email, book.serviceName, book._id);
+          await sendConfirmationEmail(book.email, book.serviceName);
         }else {
           await sendRejectionEmail(book.email, book.serviceName);
         }
@@ -94,4 +100,4 @@ router.get('/pending-requests', async (req, res) => {
     }
   });
 
-  module.exports = router;
+  module.exports = router;  

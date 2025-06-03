@@ -9,16 +9,15 @@ const verifyEmailController = async (req, res) => {
       return res.status(400).json({ success: false, message: "Token is required." });
     }
 
-    // Verify token using JWT
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const user = await Users.findById(decoded.userId); // Find user by decoded userId
+      const user = await Users.findById(decoded.userId); 
 
       if (!user) {
         return res.status(400).json({ success: false, message: "Invalid or expired token." });
       }
 
-      // Proceed with email verification
+   
       user.verified = true;
 
       await user.save();

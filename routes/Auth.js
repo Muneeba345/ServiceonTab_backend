@@ -1,20 +1,19 @@
 const express = require('express');
 const cors = require('cors');
-const ConsumerSignup = require('../models/User'); // Adjust the path if needed
+const ConsumerSignup = require('../models/User'); 
 const bcrypt = require('bcryptjs');
 const nodemailer = require('nodemailer');
-require('dotenv').config(); // Load environment variables
+require('dotenv').config(); 
 
 const router = express.Router();
-router.use(cors()); // Apply CORS to all routes in this router
+router.use(cors()); 
 
-// Regular expressions for validation
 const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const nameRegex = /^[A-Za-z]{3,15}$/;
 const passwordRegex = /^(?=.[A-Z])(?=.[!@#$%^&])[A-Za-z\d!@#$%^&]{8,15}$/;
-const phoneRegex = /^\+92\d{10}$/; // Updated to check Pakistani format (e.g., +923001234567)
+const phoneRegex = /^\+92\d{10}$/; 
 
-// Set up Nodemailer transporter
+
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -23,11 +22,11 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-// Route for creating a new consumer
+
 router.post('/createuser', async (req, res) => {
   const { name, email, password, confirmpassword, phonenumber, address } = req.body;
 
-  // Basic validation checks
+
   if (!name || !email || !password || !confirmpassword || !phonenumber || !address) {
     return res.status(400).json({ success: false, message: "All fields are required!" });
   }
@@ -47,13 +46,11 @@ router.post('/createuser', async (req, res) => {
     return res.status(400).json({ success: false, message: "Phone number must be in the format +921234567890." });
   }
 
-  // Check if user already exists
   const existingUser = await ConsumerSignup.findOne({ email });
   if (existingUser) {
     return res.status(400).json({ success: false, message: "User with this email already exists!" });
   }
 
-  // Hash the password before saving
   const hashedPassword = await bcrypt.hash(password, 10);
 
   try {
@@ -63,12 +60,12 @@ router.post('/createuser', async (req, res) => {
       phonenumber,
       address,
       password: hashedPassword,
-      isVerified: false // Initially set to false
+      isVerified: false 
     });
 
     const savedConsumer = await consumer.save();
 
-    // Send verification email
+    
     const mailOptions = {
       from: process.env.EMAIL_USER,
       to: email,
@@ -87,7 +84,7 @@ router.post('/createuser', async (req, res) => {
   }
 });
 
-// Route for email verification
+
 router.get('/verify/:id', async (req, res) => {
   const consumerId = req.params.id;
 
@@ -97,7 +94,7 @@ router.get('/verify/:id', async (req, res) => {
       return res.status(404).json({ success: false, message: "Consumer not found." });
     }
     
-    consumer.isVerified = true; // Mark email as verified
+    consumer.isVerified = true; 
     await consumer.save();
     
     res.status(200).json({ success: true, message: "Email verified successfully! You can now log in." });

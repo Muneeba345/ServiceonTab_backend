@@ -3,7 +3,7 @@ require('dotenv').config();
 
 const connectToMongo = async () => {
     try {
-        const mongoURI = process.env.MONGO_URI; // Ensure your .env file has MONGO_URI defined
+        const mongoURI = process.env.MONGO_URI; 
         await mongoose.connect(mongoURI, {
             useNewUrlParser: true,
             useUnifiedTopology: true,
@@ -11,8 +11,8 @@ const connectToMongo = async () => {
         console.log('Connected to MongoDB successfully!');
     } catch (error) {
         console.error('Error connecting to MongoDB:', error.message);
-        process.exit(1); // Exit process with failure
+        process.exit(1); 
     }
 };
 
-module.exports = connectToMongo; // Export the function
+module.exports = connectToMongo; 

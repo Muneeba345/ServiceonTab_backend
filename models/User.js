@@ -26,12 +26,11 @@ const ConsumerSchema = new mongoose.Schema({
     },
     isVerified: { 
         type: Boolean, 
-        default: false // Email verification flag, default is false
+        default: false 
     }
 });
 
-// Create the model from the schema
 const ConsumerSignup = mongoose.model('ConsumerSignup', ConsumerSchema);
 
-// Export the model
+
 module.exports = ConsumerSignup;

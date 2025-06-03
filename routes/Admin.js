@@ -8,16 +8,16 @@ const jwt = require('jsonwebtoken');
 
 const nodemailer = require('nodemailer');
 
-// Create reusable transporter object using SMTP transport
+
 const transporter = nodemailer.createTransport({
-  service: 'gmail',  // You can use any service you prefer
+  service: 'gmail',  
   auth: {
-    user: process.env.EMAIL_USER,  // Your email address
-    pass: process.env.EMAIL_PASS,  // Your email password
+    user: process.env.EMAIL_USER,  
+    pass: process.env.EMAIL_PASS,  
   },
 });
 
-// Route to fetch pending requests
+
 router.get('/pending-requests', async (req, res) => {
   try {
       const pendingRequests = await ProviderSignup.find({ status: 'pending' });
@@ -62,7 +62,7 @@ const sendRejectionEmail = async (email, providerName) => {
   }
 };
 
-// Admin accepts/rejects the provider signup request
+
 router.post('/accept/:providerId', async (req, res) => {
   const { providerId } = req.params;
   const { isAccepted } = req.body;
@@ -76,7 +76,7 @@ router.post('/accept/:providerId', async (req, res) => {
       provider.isVerified = isAccepted;
       provider.status = isAccepted ? 'approved' : 'rejected';
 
-      // If accepted, send email and verification link
+
       if (isAccepted) {
         await sendConfirmationEmail(provider.email, provider.name, provider._id);
       }else {
@@ -97,14 +97,14 @@ router.post('/verify-email', async (req, res) => {
   const { token } = req.body;
 
   try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET); // Verify the token
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const provider = await ProviderSignup.findById(decoded.providerId);
 
       if (!provider) {
           return res.status(404).json({ success: false, message: 'Provider not found' });
       }
 
-      provider.isVerified = true; // Mark the provider as verified
+      provider.isVerified = true;
       await provider.save();
       
       res.json({ success: true, message: 'Email successfully verified' });
@@ -165,6 +165,26 @@ router.post('/download/:type/:providerId', async (req, res) => {
   }
 });
 
-  
+  // Backend route (in routes/Feedback.js or similar)
+  // Adjust with your actual model name
+
+// Route to get feedback for a specific provider
+router.get('/provider/:providerId/feedback', async (req, res) => {
+    const { providerId } = req.params;
+
+    try {
+        const feedback = await Feedback.find({ providerId });  // Assuming 'Feedback' has a providerId field
+        if (!feedback) {
+            return res.status(404).json({ message: 'No feedback found for this provider.' });
+        }
+        res.json(feedback);
+    } catch (error) {
+        console.error('Error fetching feedback:', error);
+        res.status(500).json({ message: 'Server error' });
+    }
+});
+
+
+
 
 module.exports = router;
